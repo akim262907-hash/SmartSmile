@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>SmartSmile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: sticky top bar + one view at a time (hash routes); content column ~1080px, cards only where they are objects (product result, steps, diary slots) */
+:root{
+  --bg:#F5F8FA;          /* cool enamel white */
+  --surface:#FFFFFF;
+  --sunk:#E8EFF3;
+  --fg:#14232E;
+  --muted:#53697A;
+  --line:#D3DEE6;
+  --primary:#1B5E8A;     /* deep "enamel blue" */
+  --primary-ink:#FFFFFF;
+  --primary-soft:#DDEBF5;
+  --accent:#F0A929;      /* toothpaste stripe */
+  --accent-ink:#2A1B00;
+  --tooth:#FFFFFF;
+  --tooth-edge:#9FB4C3;
+  --gum:#F3C9C9;
+  --low:#1E7B52;  --low-bg:#DDF2E7;
+  --mid:#9A5A00;  --mid-bg:#FCEBCB;
+  --high:#B3261E; --high-bg:#F9DEDC;
+  --na:#53697A;   --na-bg:#E8EFF3;
+  --f-display:"Unbounded","Onest",system-ui,sans-serif;
+  --f-body:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E171E;--surface:#15222C;--sunk:#1C2C38;--fg:#E6EEF3;--muted:#9AB0BF;--line:#2A3D4B;
+  --primary:#6FB4E3;--primary-ink:#06131C;--primary-soft:#1D3546;--accent:#F5B847;--accent-ink:#2A1B00;
+  --tooth:#E9F0F4;--tooth-edge:#5D7686;--gum:#7A4A50;
+  --low:#6FD3A2;--low-bg:#163327;--mid:#F2B85A;--mid-bg:#3A2A10;--high:#F28B82;--high-bg:#3D1C1A;--na:#9AB0BF;--na-bg:#1C2C38;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E171E;--surface:#15222C;--sunk:#1C2C38;--fg:#E6EEF3;--muted:#9AB0BF;--line:#2A3D4B;
+  --primary:#6FB4E3;--primary-ink:#06131C;--primary-soft:#1D3546;--accent:#F5B847;--accent-ink:#2A1B00;
+  --tooth:#E9F0F4;--tooth-edge:#5D7686;--gum:#7A4A50;
+  --low:#6FD3A2;--low-bg:#163327;--mid:#F2B85A;--mid-bg:#3A2A10;--high:#F28B82;--high-bg:#3D1C1A;--na:#9AB0BF;--na-bg:#1C2C38;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+a{color:var(--primary)}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,5.4vw,48px);letter-spacing:-.01em}
+h2{font-size:clamp(22px,3.4vw,30px)}
+h3{font-size:17px;font-family:var(--f-body);font-weight:700}
+p{margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.lead{font-size:18px;color:var(--muted);max-width:60ch}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;min-height:60px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg);font-family:var(--f-display);font-weight:700;font-size:18px;flex:none}
+.brand svg{width:28px;height:28px}
+.nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0;padding-block:8px}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex:none;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;padding:8px 12px;border-radius:999px;white-space:nowrap}
+.nav a:hover{color:var(--fg);background:var(--sunk)}
+.nav a[aria-current="page"]{color:var(--primary-ink);background:var(--primary)}
+@media (max-width:760px){.top .wrap{flex-direction:column;align-items:stretch;gap:0;padding-block:8px 0}.brand{padding-block:4px}}
+
+main{padding-block:32px 72px}
+.view{display:grid;gap:40px}
+section{display:grid;gap:18px}
+
+/* buttons */
+.btn{appearance:none;border:0;cursor:pointer;font:inherit;font-weight:700;font-size:16px;padding:13px 20px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;min-height:48px}
+.btn-primary{background:var(--primary);color:var(--primary-ink)}
+.btn-accent{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:var(--sunk);color:var(--fg)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:32px;align-items:center}
+.hero-txt{display:grid;gap:18px;min-width:0}
+.hero-art{background:var(--primary-soft);border-radius:24px;padding:20px;display:grid;place-items:center}
+.hero-art svg{width:100%;max-width:300px;height:auto}
+@media (max-width:760px){.hero{grid-template-columns:1fr}.hero-art{order:-1;padding:12px}.hero-art svg{max-width:200px}}
+
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-block:1px solid var(--line)}
+.rule{padding:18px 18px 18px 0;display:grid;gap:4px}
+.rule+.rule{border-left:1px solid var(--line);padding-left:18px}
+.rule b{font-family:var(--f-mono);font-size:30px;color:var(--primary);line-height:1}
+@media (max-width:640px){.rules{grid-template-columns:1fr}.rule+.rule{border-left:0;border-top:1px solid var(--line);padding-left:0}}
+
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:10px;align-content:start;min-width:0}
+.tip{background:var(--accent);color:var(--accent-ink);border-radius:var(--r);padding:22px;display:grid;gap:8px}
+.tip .eyebrow{color:var(--accent-ink);opacity:.75}
+.tip p{font-size:18px;font-weight:600}
+.loop{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;counter-reset:s}
+.loop div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:2px}
+.loop b{font-family:var(--f-display);font-size:14px;letter-spacing:.04em;color:var(--primary)}
+@media (max-width:640px){.loop{grid-template-columns:1fr 1fr}}
+
+/* form */
+label{font-weight:600;font-size:14px}
+.field{display:grid;gap:6px;min-width:0}
+input[type=text],select{font:inherit;font-size:16px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--fg);width:100%;min-height:48px}
+input[type=text]:focus,select:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px var(--primary-soft)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;font:inherit;font-size:14px;font-weight:600;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 12px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:var(--primary)}
+.chip[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--sunk);border-radius:12px;padding:4px;gap:4px}
+.seg button{appearance:none;border:0;font:inherit;font-size:14px;font-weight:600;padding:9px 12px;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+
+/* product result */
+.check-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:24px;align-items:start}
+@media (max-width:820px){.check-grid{grid-template-columns:1fr}}
+.panel{display:grid;gap:16px}
+.result{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.result-head{padding:20px;display:grid;gap:10px;border-bottom:1px solid var(--line)}
+.level{display:inline-flex;align-items:center;gap:8px;font-weight:700;padding:6px 12px;border-radius:999px;font-size:15px;justify-self:start}
+.level i{width:10px;height:10px;border-radius:50%;background:currentColor;display:inline-block}
+.lv-low{color:var(--low);background:var(--low-bg)}
+.lv-mid{color:var(--mid);background:var(--mid-bg)}
+.lv-high{color:var(--high);background:var(--high-bg)}
+.lv-na{color:var(--na);background:var(--na-bg)}
+.factors{display:grid;grid-template-columns:repeat(3,1fr)}
+.factor{padding:16px 20px;display:grid;gap:6px}
+.factor+.factor{border-left:1px solid var(--line)}
+.factor .eyebrow{font-size:11px}
+.meter{display:flex;gap:4px}
+.meter span{height:8px;flex:1;border-radius:4px;background:var(--sunk)}
+.meter.v1 span:nth-child(1),.meter.v2 span{background:var(--fg)}
+.factor b{font-size:15px}
+@media (max-width:520px){.factors{grid-template-columns:1fr}.factor+.factor{border-left:0;border-top:1px solid var(--line)}}
+.result-body{padding:20px;display:grid;gap:12px;border-top:1px solid var(--line)}
+.result-body ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.swap{background:var(--primary-soft);border-radius:12px;padding:14px;display:grid;gap:4px}
+.disclaimer{font-size:13px;color:var(--muted)}
+
+.cat-table{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top;font-size:15px}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+
+/* guide */
+.guide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:820px){.guide{grid-template-columns:1fr}}
+.jaws{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px)}
+@media (max-width:820px){.jaws{position:static}}
+.jaws svg{width:100%;height:auto;max-height:62vh;display:block;margin:0 auto}
+.tooth{fill:var(--tooth);stroke:var(--tooth-edge);stroke-width:1.4;transition:fill .25s}
+.zone{fill:none;stroke:transparent;stroke-width:9;stroke-linecap:round;transition:stroke .25s}
+.gum{fill:none;stroke:var(--gum);stroke-width:7;stroke-linecap:round}
+.gap-line{stroke:transparent;stroke-width:3;stroke-linecap:round}
+.on.zone{stroke:var(--accent)}
+.on.tooth{fill:var(--accent)}
+.on.gum{stroke:var(--accent)}
+.on.gap-line{stroke:var(--accent)}
+.jaw-label{font-family:var(--f-body);font-size:12px;font-weight:600;fill:var(--muted);letter-spacing:.06em}
+.dim{opacity:.35;transition:opacity .25s}
+@media (prefers-reduced-motion:no-preference){
+  .running .on{animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.55}}
+}
+.stepbox{display:grid;gap:16px}
+.timer{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.timer .t{font-family:var(--f-mono);font-size:56px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;color:var(--primary)}
+.progress{height:10px;background:var(--sunk);border-radius:5px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--primary);width:0;transition:width .4s linear}
+.steps-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.steps-list li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;color:var(--muted);font-size:15px}
+.steps-list li .n{font-family:var(--f-mono);font-size:13px;font-weight:700;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);color:var(--muted)}
+.steps-list li.cur{background:var(--primary-soft);color:var(--fg);font-weight:600}
+.steps-list li.cur .n{background:var(--primary);color:var(--primary-ink)}
+.steps-list li.done .n{background:var(--low-bg);color:var(--low)}
+.steps-list .sec{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.stepcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:12px}
+.stepcard h2{font-size:22px}
+.checklist{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.checklist li{display:flex;gap:10px;align-items:flex-start}
+.checklist li::before{content:"";flex:none;width:20px;height:20px;margin-top:2px;border-radius:6px;background:var(--low-bg);border:2px solid var(--low)}
+
+/* diary */
+.diary{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:24px;align-items:start}
+@media (max-width:820px){.diary{grid-template-columns:1fr}}
+.slots{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:520px){.slots{grid-template-columns:1fr}}
+.slot{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px;align-content:start}
+.slot h3{display:flex;justify-content:space-between;align-items:baseline}
+.slot h3 span{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.items{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.items li{display:flex;align-items:center;gap:8px;justify-content:space-between;background:var(--sunk);border-radius:10px;padding:8px 10px;font-size:15px}
+.items li .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.items li .nm{flex:1;min-width:0}
+.items button{appearance:none;border:0;background:transparent;color:var(--muted);cursor:pointer;font:inherit;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px}
+.items button:hover{color:var(--high)}
+.empty{font-size:14px;color:var(--muted)}
+.adder{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end}
+@media (max-width:620px){.adder{grid-template-columns:1fr 1fr}.adder .field:first-child{grid-column:1/-1}}
+.stats{display:grid;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.stat{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.stat b{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:16px}
+.stat:last-child{border-bottom:0}
+.hyg{display:grid;gap:8px}
+.hyg label{display:flex;gap:10px;align-items:center;font-weight:500;font-size:15px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.hyg input{width:20px;height:20px;accent-color:var(--primary)}
+.summary{background:var(--primary-soft);border-radius:var(--r);padding:18px;display:grid;gap:8px}
+.example-note{font-size:13px;font-weight:600;color:var(--mid);background:var(--mid-bg);border-radius:8px;padding:8px 12px;justify-self:start}
+
+/* myths */
+.myths{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.myth{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:grid}
+.myth button{appearance:none;border:0;background:transparent;font:inherit;text-align:left;padding:18px;cursor:pointer;color:var(--fg);display:grid;gap:6px}
+.myth .tag{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700}
+.myth .q{font-size:17px;font-weight:700}
+.myth .tag.m{color:var(--high)}
+.myth .a{padding:0 18px 18px;display:grid;gap:6px}
+.myth .tag.f{color:var(--low)}
+.myth .hint{font-size:13px;color:var(--primary);font-weight:600}
+
+/* dentist */
+.alarm{border:2px solid var(--high);background:var(--high-bg);border-radius:18px;padding:22px;display:grid;gap:12px}
+.alarm h2{color:var(--high)}
+.alarm ul{margin:0;padding-left:20px;display:grid;gap:6px;font-weight:500}
+.plain ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.src{list-style:none;margin:0;padding:0;display:grid;gap:0;border-top:1px solid var(--line)}
+.src li{padding:12px 0;border-bottom:1px solid var(--line);display:grid;gap:2px}
+.src small{color:var(--muted)}
+
+.music{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:14px}
+.music .sw{display:flex;gap:10px;align-items:center;font-size:15px;cursor:pointer}
+.music .sw input{width:20px;height:20px;accent-color:var(--primary)}
+.music select{width:auto;min-height:40px;padding:8px 12px;font-size:15px}
+.hit{background:var(--primary-soft);border-radius:12px;padding:14px;display:grid;gap:8px}
+.hit b{font-size:17px}
+.hit .links{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-weight:600;font-size:15px}
+.eq{display:inline-flex;gap:3px;align-items:flex-end;height:16px}
+.eq span{width:4px;background:var(--accent);height:30%;border-radius:2px}
+@media (prefers-reduced-motion:no-preference){.eq.play span{animation:eq .6s ease-in-out infinite alternate}.eq.play span:nth-child(2){animation-delay:.2s}.eq.play span:nth-child(3){animation-delay:.4s}@keyframes eq{to{height:100%}}}
+.foot{border-top:1px solid var(--line);padding-block:24px;color:var(--muted);font-size:13px}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#home" aria-label="SmartSmile — на главную">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 4c-4 0-6 3-6 7 0 3 1 5 2 8 1 4 1 9 4 9 2 0 2-3 3-6 .6-2 1.4-3 4-3s3.4 1 4 3c1 3 1 6 3 6 3 0 3-5 4-9 1-3 2-5 2-8 0-4-2-7-6-7-3 0-4 1.5-7 1.5S12 4 9 4z" fill="var(--primary)"/><path d="M8 10c1-2 3-2.5 5-2" stroke="var(--accent)" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+      SmartSmile
+    </a>
+    <nav class="nav" aria-label="Разделы">
+      <a href="#home">Главная</a>
+      <a href="#guide">Как чистить</a>
+      <a href="#check">Оценить продукт</a>
+      <a href="#diary">Дневник</a>
+      <a href="#swaps">Что выбрать вместо</a>
+      <a href="#myths">Мифы и факты</a>
+      <a href="#dentist">К стоматологу</a>
+      <a href="#about">О проекте</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ГЛАВНАЯ -->
+<div class="view" id="v-home">
+  <section class="hero">
+    <div class="hero-txt">
+      <p class="eyebrow">Интерактивный помощник для зубов</p>
+      <h1>Здоровые зубы начинаются с простых привычек</h1>
+      <p class="lead">Пройди чистку по шагам с таймером, проверь, как еда и напитки могут влиять на зубы, и отметь свой день в дневнике.</p>
+      <div class="row">
+        <a class="btn btn-primary" href="#guide">Как чистить</a>
+        <a class="btn btn-accent" href="#check">Оценить продукт</a>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 240 240">
+        <circle cx="120" cy="120" r="100" fill="none" stroke="var(--primary)" stroke-opacity=".18" stroke-width="14"/>
+        <circle cx="120" cy="120" r="100" fill="none" stroke="var(--primary)" stroke-width="14" stroke-linecap="round" stroke-dasharray="470 628" transform="rotate(-90 120 120)"/>
+        <path d="M86 70c-15 0-22 11-22 25 0 11 4 19 7 29 4 15 4 34 15 34 7 0 8-11 11-22 2-7 5-11 23-11s21 4 23 11c3 11 4 22 11 22 11 0 11-19 15-34 3-10 7-18 7-29 0-14-7-25-22-25-11 0-15 5-34 5S97 70 86 70z" fill="var(--tooth)" stroke="var(--primary)" stroke-width="4"/>
+        <path d="M82 92c4-7 11-9 18-8" stroke="var(--accent)" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <text x="120" y="194" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="20" fill="var(--primary)">2:00</text>
+      </svg>
+    </div>
+  </section>
+
+  <section aria-label="Три главных правила">
+    <div class="rules">
+      <div class="rule"><b>2 мин</b><span>столько длится одна чистка</span></div>
+      <div class="rule"><b>2 раза</b><span>в день, пастой с фтором</span></div>
+      <div class="rule"><b>1 раз</b><span>в день чистить между зубами нитью или ёршиком</span></div>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div class="card">
+      <p class="eyebrow">Проверка продукта</p>
+      <h3>Что ты сегодня ел или пил?</h3>
+      <form id="homeSearch" class="row" style="flex-wrap:nowrap">
+        <input type="text" id="homeQ" list="productList" placeholder="Например, газировка" aria-label="Название продукта" style="flex:1;min-width:0">
+        <button class="btn btn-primary" type="submit">Проверить</button>
+      </form>
+      <p class="small muted">Покажем сахар, кислоту и липкость продукта и что с этим делать.</p>
+    </div>
+    <div class="tip">
+      <p class="eyebrow">Совет дня</p>
+      <p id="tipText"></p>
+      <button class="btn btn-ghost" id="nextTip" type="button" style="justify-self:start;background:rgba(255,255,255,.55);color:var(--accent-ink);min-height:40px;padding:8px 14px;font-size:14px">Ещё совет</button>
+    </div>
+    <div class="card">
+      <p class="eyebrow">Дневник</p>
+      <h3>Отметь, что съел за день</h3>
+      <p class="muted small">В конце дня увидишь, сколько было сладких перекусов и кислых напитков, и получишь совет на завтра.</p>
+      <a class="btn btn-ghost" href="#diary" style="justify-self:start">Открыть дневник</a>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Как устроен сайт</p>
+    <div class="loop">
+      <div><b>ЗНАТЬ</b><span class="small muted">Короткая инструкция и объяснение причин</span></div>
+      <div><b>ПРОВЕРИТЬ</b><span class="small muted">Оценка продукта или напитка</span></div>
+      <div><b>СДЕЛАТЬ</b><span class="small muted">Совет, что изменить прямо сейчас</span></div>
+      <div><b>ЗАКРЕПИТЬ</b><span class="small muted">Дневник и отметки о чистке</span></div>
+    </div>
+  </section>
+
+  <section class="card" style="border-color:var(--high)">
+    <h3>Когда пора к стоматологу</h3>
+    <p class="muted">Сильная боль, отёк, гной, травма зуба или кровотечение, которое долго не проходит. Сайт не ставит диагноз, с такими симптомами нужен врач.</p>
+    <a href="#dentist" style="font-weight:600">Все тревожные признаки</a>
+  </section>
+</div>
+
+<!-- КАК ЧИСТИТЬ -->
+<div class="view" id="v-guide" hidden>
+  <section>
+    <p class="eyebrow">Интерактивная инструкция</p>
+    <h1>Почистим зубы правильно за 2 минуты</h1>
+    <p class="lead">Сайт подсвечивает зону, которую нужно чистить сейчас. Таймер сам переключает шаги, их можно поставить на паузу или листать вручную.</p>
+  </section>
+  <div class="guide" id="guideRoot">
+    <div class="jaws" id="jaws">
+      <svg viewBox="0 0 320 430" id="jawSvg" role="img" aria-label="Схема зубов: подсвечена текущая зона чистки"></svg>
+    </div>
+    <div class="stepbox">
+      <div class="stepcard" aria-live="polite">
+        <p class="eyebrow" id="stepEyebrow"></p>
+        <h2 id="stepTitle"></h2>
+        <p id="stepText"></p>
+        <div id="stepExtra"></div>
+      </div>
+      <div class="timer">
+        <span class="t" id="timeLeft">2:00</span>
+        <span class="muted small" id="timeLabel">осталось из 2 минут</span>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="progBar"></span></div>
+      <div class="row">
+        <button class="btn btn-ghost" id="prevBtn" type="button">Назад</button>
+        <button class="btn btn-primary" id="playBtn" type="button">Начать</button>
+        <button class="btn btn-ghost" id="nextBtn" type="button">Далее</button>
+        <button class="btn btn-ghost" id="resetBtn" type="button">Заново</button>
+      </div>
+      <div class="music">
+        <div class="row" style="justify-content:space-between">
+          <label class="sw"><input type="checkbox" id="musicOn" checked> Музыка во время чистки <span class="eq" id="eq" aria-hidden="true"><span></span><span></span><span></span></span></label>
+          <select id="tuneSel" aria-label="Мелодия"><option value="rnd">Случайная мелодия</option></select>
+        </div>
+        <p class="small muted" id="nowPlaying">Нажми «Начать» — мелодия играет, пока идёт таймер, и замолкает через 2 минуты.</p>
+        <div class="hit">
+          <span class="eyebrow">Или случайный хит</span>
+          <b id="hitName"></b>
+          <div class="links">
+            <a id="hitYt" href="#" target="_blank" rel="noopener">Слушать на YouTube</a>
+            <a id="hitSp" href="#" target="_blank" rel="noopener">Spotify</a>
+            <button class="chip" id="hitNext" type="button">Другая песня</button>
+          </div>
+          <p class="small muted">Песня откроется в новой вкладке. Включи её, вернись сюда и чисти зубы до конца припева — обычно это как раз около 2 минут.</p>
+        </div>
+      </div>
+      <ol class="steps-list" id="stepsList"></ol>
+    </div>
+  </div>
+</div>
+
+<!-- ОЦЕНИТЬ ПРОДУКТ -->
+<div class="view" id="v-check" hidden>
+  <section>
+    <p class="eyebrow">Оцени продукт</p>
+    <h1>Как продукт может влиять на зубы</h1>
+    <p class="lead">Мы смотрим на три вещи: свободные сахара, кислотность и липкость, а потом учитываем, как часто ты это ешь. Это оценка риска, а не диагноз.</p>
+  </section>
+  <div class="check-grid">
+    <form class="panel" id="checkForm">
+      <div class="field">
+        <label for="q">Название продукта</label>
+        <input type="text" id="q" list="productList" placeholder="Кола, яблоко, ириска…" autocomplete="off">
+      </div>
+      <div class="field">
+        <span style="font-weight:600;font-size:14px">Или выбери из категории</span>
+        <div class="chips" id="catChips"></div>
+        <div class="chips" id="catItems"></div>
+      </div>
+      <div class="field">
+        <span style="font-weight:600;font-size:14px" id="freqL">Как часто ты это ешь или пьёшь?</span>
+        <div class="seg" role="group" aria-labelledby="freqL" id="freqSeg">
+          <button type="button" data-v="rare" aria-pressed="false">Иногда</button>
+          <button type="button" data-v="daily" aria-pressed="true">Раз в день</button>
+          <button type="button" data-v="often" aria-pressed="false">Несколько раз в день</button>
+        </div>
+      </div>
+      <div class="field">
+        <span style="font-weight:600;font-size:14px" id="ctxL">Когда?</span>
+        <div class="seg" role="group" aria-labelledby="ctxL" id="ctxSeg">
+          <button type="button" data-v="meal" aria-pressed="false">Во время еды</button>
+          <button type="button" data-v="snack" aria-pressed="true">Как перекус</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" type="submit">Проверить</button>
+    </form>
+    <div id="result" aria-live="polite"></div>
+  </div>
+
+  <section>
+    <h2>Как читать оценку</h2>
+    <div class="cat-table">
+      <table>
+        <thead><tr><th>Уровень</th><th>Что это значит</th></tr></thead>
+        <tbody>
+          <tr><td><span class="level lv-low"><i></i>Низкий</span></td><td>При обычном употреблении в продукте нет заметного количества свободных сахаров или кислот. Общий рацион и чистка всё равно важны.</td></tr>
+          <tr><td><span class="level lv-mid"><i></i>Умеренный</span></td><td>Есть один или несколько факторов, которые при частом употреблении могут повышать риск.</td></tr>
+          <tr><td><span class="level lv-high"><i></i>Повышенный</span></td><td>Много свободных сахаров и/или выраженная кислотность, особенно если есть или пить это часто.</td></tr>
+          <tr><td><span class="level lv-na"><i></i>Мало данных</span></td><td>Продукта нет в базе или состав неизвестен. Оценку не выдумываем.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ДНЕВНИК -->
+<div class="view" id="v-diary" hidden>
+  <section>
+    <p class="eyebrow">Дневник питания</p>
+    <h1>Мой день для зубов</h1>
+    <p class="lead">Добавляй продукты по приёмам пищи и отмечай чистку. Сайт считает привычки, а не «здоровье зубов».</p>
+  </section>
+  <form class="adder" id="addForm">
+    <div class="field">
+      <label for="dq">Продукт</label>
+      <input type="text" id="dq" list="productList" placeholder="Что съел или выпил?" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="dslot">Когда</label>
+      <select id="dslot">
+        <option value="breakfast">Завтрак</option>
+        <option value="lunch">Обед</option>
+        <option value="dinner">Ужин</option>
+        <option value="snack" selected>Перекус</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" type="submit">Добавить</button>
+  </form>
+  <p class="example-note" id="exampleNote" hidden>Это пример дня. Добавь свой продукт или нажми «Очистить день».</p>
+  <div class="diary">
+    <div class="slots" id="slots"></div>
+    <div class="panel">
+      <div class="stats" id="stats"></div>
+      <div class="hyg">
+        <label><input type="checkbox" id="h-am"> Утренняя чистка</label>
+        <label><input type="checkbox" id="h-pm"> Вечерняя чистка</label>
+        <label><input type="checkbox" id="h-floss"> Нить или ёршик</label>
+      </div>
+      <div class="summary" id="summary"></div>
+      <button class="btn btn-ghost" id="clearDay" type="button">Очистить день</button>
+    </div>
+  </div>
+</div>
+
+<!-- АЛЬТЕРНАТИВЫ -->
+<div class="view" id="v-swaps" hidden>
+  <section>
+    <p class="eyebrow">Что выбрать вместо</p>
+    <h1>Не запрещать, а заменять</h1>
+    <p class="lead">Еду не нужно делить на абсолютно хорошую и плохую. Смотри на частоту, количество сахара, кислотность и общий рацион.</p>
+  </section>
+  <div class="cat-table">
+    <table>
+      <thead><tr><th>Вместо</th><th>Можно</th><th>Почему</th></tr></thead>
+      <tbody id="swapRows"></tbody>
+    </table>
+  </div>
+  <section>
+    <h2>Примеры завтраков</h2>
+    <p class="muted">Что обычно едят утром и как это выглядит для зубов. Уровень считается по самому «тяжёлому» продукту в завтраке. Любой завтрак можно сразу добавить в дневник.</p>
+    <div class="cols" id="bfList"></div>
+  </section>
+  <section>
+    <h2>Если всё-таки сладкое или кислое</h2>
+    <div class="cols">
+      <div class="card"><h3>Ешь вместе с едой</h3><p class="muted">Сладкое во время обеда обычно лучше, чем много маленьких перекусов в течение дня.</p></div>
+      <div class="card"><h3>Не растягивай напиток</h3><p class="muted">Газировку или сок лучше выпить за раз во время еды, чем потягивать по глотку весь день.</p></div>
+      <div class="card"><h3>Подожди с чисткой</h3><p class="muted">После кислого напитка ADA советует подождать около часа, прежде чем чистить зубы. Пока можно выпить воды.</p></div>
+    </div>
+  </section>
+</div>
+
+<!-- МИФЫ -->
+<div class="view" id="v-myths" hidden>
+  <section>
+    <p class="eyebrow">Мифы и факты</p>
+    <h1>Проверь себя</h1>
+    <p class="lead">Нажми на карточку, чтобы увидеть, что говорят рекомендации.</p>
+  </section>
+  <div class="myths" id="mythList"></div>
+</div>
+
+<!-- СТОМАТОЛОГ -->
+<div class="view" id="v-dentist" hidden>
+  <section>
+    <p class="eyebrow">Когда обратиться к стоматологу</p>
+    <h1>Сайт учит, а лечит врач</h1>
+    <p class="lead">SmartSmile не диагностирует кариес, гингивит и другие болезни. Если что-то беспокоит, иди к специалисту.</p>
+  </section>
+  <div class="alarm">
+    <h2>Иди к врачу как можно скорее, если есть</h2>
+    <ul>
+      <li>сильная зубная боль</li>
+      <li>отёк щеки, десны или лица</li>
+      <li>гной или неприятный привкус, который не проходит</li>
+      <li>травма зуба: скол, выбитый или шатающийся зуб</li>
+      <li>кровотечение, которое долго не останавливается</li>
+    </ul>
+    <p class="small">При отёке с температурой, затруднённом дыхании или глотании обращайся за неотложной помощью.</p>
+  </div>
+  <div class="cols plain">
+    <div class="card"><h3>Стоит записаться на приём</h3><ul class="muted"><li>дёсны регулярно кровоточат при чистке</li><li>зубы реагируют на холодное, горячее или сладкое</li><li>видны тёмные пятна или дырочки на зубах</li><li>долго держится неприятный запах изо рта</li></ul></div>
+    <div class="card"><h3>Профилактика</h3><ul class="muted"><li>регулярные осмотры, как советует твой стоматолог</li><li>для детей рекомендации зависят от возраста: их лучше уточнить у детского стоматолога</li><li>не обещаем отбеливание или «восстановление эмали» домашними средствами</li></ul></div>
+  </div>
+</div>
+
+<!-- О ПРОЕКТЕ -->
+<div class="view" id="v-about" hidden>
+  <section>
+    <p class="eyebrow">О проекте</p>
+    <h1>Почему мы сделали SmartSmile</h1>
+    <p class="lead">Мы опросили 67 человек из Костаная, Астаны и Алматы. Большинство чистит зубы дважды в день, но технику многие знают лишь частично, и почти всем интересно, как еда влияет на зубы.</p>
+  </section>
+  <div class="cat-table">
+    <table>
+      <thead><tr><th>Вопрос опроса</th><th>Результат</th><th>Что сделали на сайте</th></tr></thead>
+      <tbody>
+        <tr><td>Знаете ли технику чистки?</td><td>44,8% хорошо, 50,7% частично</td><td>Пошаговая инструкция с таймером</td></tr>
+        <tr><td>Нужна ли интерактивная инструкция?</td><td>47,8% да, 38,8% скорее да</td><td>Подсветка зон на схеме зубов</td></tr>
+        <tr><td>Как часто едите сладкое?</td><td>37,3% ежедневно, 46,3% несколько раз в неделю</td><td>Учёт частоты в оценке продукта</td></tr>
+        <tr><td>Готовы вводить продукты за день?</td><td>56,7% да, 26,9% возможно</td><td>Дневник питания</td></tr>
+        <tr><td>Самая полезная функция</td><td>33,8% оценка продуктов</td><td>Раздел «Оценить продукт»</td></tr>
+        <tr><td>Нужны рекомендации по продуктам?</td><td>60,6% да, 30,3% иногда</td><td>Раздел «Что выбрать вместо»</td></tr>
+        <tr><td>Интересен ли такой сайт?</td><td>44,8% очень, 32,8% скорее да</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted">Выборка из 67 ответов подходит для учебного проекта, но не представляет всё население.</p>
+  <section>
+    <h2>Источники</h2>
+    <ul class="src">
+      <li><a href="https://www.who.int/news-room/fact-sheets/detail/sugars-and-dental-caries" target="_blank" rel="noopener">WHO — Sugars and dental caries</a><small>Свободные сахара и кариес, ограничение до &lt;10% (лучше &lt;5%) энергии</small></li>
+      <li><a href="https://www.who.int/ru/news-room/fact-sheets/detail/oral-health" target="_blank" rel="noopener">ВОЗ — Охрана здоровья полости рта</a><small>Чистка дважды в день пастой с фтором (1000–1500 ppm)</small></li>
+      <li><a href="https://www.ada.org/resources/ada-library/oral-health-topics/home-care" target="_blank" rel="noopener">ADA — Home Oral Care</a><small>Дважды в день по две минуты, межзубная очистка ежедневно</small></li>
+      <li><a href="https://www.ada.org/resources/ada-library/oral-health-topics/toothbrushes" target="_blank" rel="noopener">ADA — Toothbrushes</a><small>Угол 45° к дёснам, короткие мягкие движения</small></li>
+      <li><a href="https://www.ada.org/resources/ada-library/oral-health-topics/floss" target="_blank" rel="noopener">ADA — Floss / Interdental Cleaners</a><small>Ежедневная очистка между зубами</small></li>
+      <li><a href="https://www.nhs.uk/live-well/healthy-teeth-and-gums/how-to-keep-your-teeth-clean/" target="_blank" rel="noopener">NHS — How to keep your teeth clean</a><small>Выплюнуть пасту и не полоскать рот сразу</small></li>
+    </ul>
+  </section>
+</div>
+
+</main>
+
+<footer class="foot"><div class="wrap"><span>SmartSmile — учебный проект. Образовательный сервис, не замена стоматологу.</span><span>Данные дневника хранятся только в твоём браузере.</span></div></footer>
+
+<datalist id="productList"></datalist>
+
+<script>
+(function(){
+"use strict";
+// ---------- база продуктов ----------
+// sugar: 0 нет / 1 средне / 2 много свободных сахаров; acid: 0 / 1 слабая / 2 выраженная; sticky: задерживается на зубах
+var CATS={sweets:"Сладости",drinks:"Сладкие напитки",acid:"Кислые",dairy:"Молочные",fruit:"Фрукты и овощи",neutral:"Вода и другое",breakfast:"Завтрак",snacks:"Снеки",meals:"Обычная еда"};
+var P=[
+ {id:"cola",n:"Сладкая газировка",c:"drinks",s:2,a:2,k:false,al:["кола","пепси","фанта","спрайт","газировка","лимонад магазинный","coca","cola"],t:"Пей во время еды и не растягивай на весь день. Не чисти зубы сразу после, подожди около часа.",w:"Вода, газированная вода без вкуса"},
+ {id:"diet",n:"Газировка без сахара",c:"acid",s:0,a:2,k:false,al:["кола зеро","лайт","zero","диетическая газировка"],t:"Сахара нет, но кислота может повреждать эмаль. Лучше пить с едой и не держать во рту.",w:"Вода, минералка без вкуса"},
+ {id:"energy",n:"Энергетик",c:"drinks",s:2,a:2,k:false,al:["ред булл","red bull","монстр","адреналин","флэш","энергетический напиток"],t:"Один из самых «тяжёлых» для зубов напитков: и сахар, и кислота. Если пьёшь, то редко и с едой.",w:"Вода, чай без сахара"},
+ {id:"sport",n:"Спортивный напиток",c:"drinks",s:2,a:2,k:false,al:["изотоник","повераде","gatorade"],t:"На обычной тренировке хватает воды. Сладкий изотоник лучше оставить для долгих нагрузок.",w:"Вода"},
+ {id:"juice",n:"Апельсиновый сок",c:"acid",s:1,a:2,k:false,al:["сок","яблочный сок","мультифрукт","фреш","нектар"],t:"Сахар в соке считается свободным. Лучше стакан во время еды, чем потягивать весь день.",w:"Целый апельсин или вода"},
+ {id:"lemonade",n:"Домашний лимонад",c:"drinks",s:2,a:2,k:false,al:["лимонад"],t:"Сахар плюс лимонная кислота. Пей с едой и не полощи им рот.",w:"Вода с ломтиком огурца или мятой"},
+ {id:"kvas",n:"Квас",c:"drinks",s:1,a:1,k:false,al:[],t:"Есть сахар и немного кислоты. Не пей маленькими глотками весь день.",w:"Вода"},
+ {id:"compote",n:"Компот",c:"drinks",s:2,a:1,k:false,al:["морс"],t:"Обычно в нём много добавленного сахара. Можно варить менее сладким.",w:"Компот без сахара, вода"},
+ {id:"sweettea",n:"Чай с сахаром",c:"drinks",s:2,a:0,k:false,al:["сладкий чай","холодный чай","айс ти","ice tea","чай в бутылке"],t:"Риск даёт сахар, особенно если пить такой чай много раз в день.",w:"Чай без сахара"},
+ {id:"coffeesug",n:"Кофе с сахаром",c:"drinks",s:1,a:0,k:false,al:["латте с сиропом","капучино с сахаром","раф"],t:"Сироп и сахар добавляют свободные сахара. Попробуй постепенно уменьшать сахар.",w:"Кофе без сахара"},
+ {id:"tea",n:"Чай или кофе без сахара",c:"neutral",s:0,a:0,k:false,al:["чай","кофе","зелёный чай","черный чай","эспрессо","американо"],t:"Без сахара это нейтральный выбор для риска кариеса. Окрашивание эмали — отдельная тема.",w:""},
+ {id:"lemontea",n:"Чай с лимоном без сахара",c:"acid",s:0,a:1,k:false,al:["чай с лимоном"],t:"Немного кислоты, но без сахара риск невысокий.",w:""},
+ {id:"water",n:"Вода",c:"neutral",s:0,a:0,k:false,al:["минералка","вода без газа","газированная вода"],t:"Лучший напиток между приёмами пищи.",w:""},
+ {id:"milk",n:"Молоко",c:"dairy",s:0,a:0,k:false,al:["кефир","айран"],t:"Молочный сахар не считается свободным. А вот какао и сладкое молоко — уже другое дело.",w:""},
+ {id:"cocoa",n:"Какао или сладкое молоко",c:"dairy",s:2,a:0,k:false,al:["какао","молочный коктейль","шоколадное молоко","несквик"],t:"Добавленный сахар. Лучше пить с завтраком, а не как перекус.",w:"Обычное молоко"},
+ {id:"yogurt",n:"Натуральный йогурт",c:"dairy",s:0,a:0,k:false,al:["йогурт без сахара","греческий йогурт"],t:"Без добавленного сахара риск низкий. Проверяй состав.",w:""},
+ {id:"sweetyog",n:"Сладкий йогурт",c:"dairy",s:1,a:0,k:false,al:["йогурт","сырок","творожок","глазированный сырок","даниссимо"],t:"Не всё молочное автоматически полезно: смотри, сколько сахара в составе.",w:"Натуральный йогурт с ягодами"},
+ {id:"cheese",n:"Сыр",c:"dairy",s:0,a:0,k:false,al:["творог"],t:"Без сахара и кислоты, хороший вариант перекуса.",w:""},
+ {id:"choc",n:"Шоколад",c:"sweets",s:2,a:0,k:false,al:["шоколадка","сникерс","твикс","киткат","батончик шоколадный"],t:"Лучше съесть после еды, чем растягивать на весь день.",w:"Орехи или сыр как перекус"},
+ {id:"candy",n:"Леденцы и карамель",c:"sweets",s:2,a:0,k:true,al:["конфета","конфеты","леденец","карамель","чупа-чупс","чупа чупс"],t:"Леденец долго растворяется во рту, и сахар действует дольше.",w:"Жвачка без сахара"},
+ {id:"toffee",n:"Ириски",c:"sweets",s:2,a:0,k:true,al:["ириска","тянучки","сливочная конфета"],t:"Сахар плюс липкость: остаётся на зубах. После них хорошо выпить воды.",w:"Кусочек сыра или фрукт"},
+ {id:"gummy",n:"Мармелад",c:"sweets",s:2,a:1,k:true,al:["жевательный мармелад","харибо","мармеладки","кислые конфеты"],t:"Липкий и часто кислый (особенно «кислые» мармеладки).",w:"Свежие ягоды"},
+ {id:"cookie",n:"Печенье",c:"sweets",s:1,a:0,k:true,al:["вафли","крекер сладкий","пряник"],t:"Крахмал и сахар застревают между зубами.",w:"Яблоко, орехи"},
+ {id:"cake",n:"Торт или пирожное",c:"sweets",s:2,a:0,k:false,al:["торт","пирожное","кекс","маффин","донат","пончик","булочка"],t:"Лучше как десерт после основной еды.",w:""},
+ {id:"icecream",n:"Мороженое",c:"sweets",s:2,a:0,k:false,al:["пломбир","эскимо"],t:"Сахар. Ешь целиком, а не по ложке весь вечер.",w:"Натуральный йогурт"},
+ {id:"honey",n:"Мёд",c:"sweets",s:2,a:0,k:true,al:["варенье","джем","сгущёнка","сгущенка","нутелла","паста шоколадная"],t:"Мёд и варенье — тоже свободные сахара, и они липкие.",w:""},
+ {id:"bar",n:"Мюсли-батончик",c:"snacks",s:2,a:0,k:true,al:["протеиновый батончик","злаковый батончик","гранола"],t:"Часто в нём много сахара и он липкий, хотя выглядит «полезным».",w:"Орехи"},
+ {id:"dried",n:"Сухофрукты",c:"snacks",s:1,a:0,k:true,al:["изюм","курага","финики","чернослив"],t:"Сахар концентрированный, и они прилипают к зубам. Лучше с едой.",w:"Свежие фрукты"},
+ {id:"chips",n:"Чипсы",c:"snacks",s:0,a:0,k:true,al:["сухарики","кириешки","лейс","крекеры","попкорн"],t:"Сахара мало, но крахмал застревает между зубами.",w:"Орехи, морковные палочки"},
+ {id:"nuts",n:"Орехи",c:"snacks",s:0,a:0,k:false,al:["миндаль","арахис","фундук","семечки"],t:"Нейтральный перекус для зубов (если без глазури).",w:""},
+ {id:"apple",n:"Яблоко",c:"fruit",s:0,a:1,k:false,al:["груша"],t:"Целые фрукты не нужно бояться. Немного кислоты, но это хороший выбор.",w:""},
+ {id:"orange",n:"Апельсин",c:"fruit",s:0,a:1,k:false,al:["мандарин","грейпфрут","киви"],t:"Целый фрукт лучше сока: сахар в нём не свободный.",w:""},
+ {id:"lemon",n:"Лимон",c:"acid",s:0,a:2,k:false,al:["лайм"],t:"Очень кислый. Не сосать дольками и не чистить зубы сразу после.",w:""},
+ {id:"banana",n:"Банан",c:"fruit",s:0,a:0,k:false,al:["ягоды","клубника","виноград"],t:"Целые фрукты и ягоды — нормальная часть рациона.",w:""},
+ {id:"veg",n:"Свежие овощи",c:"fruit",s:0,a:0,k:false,al:["морковь","огурец","помидор","салат"],t:"Хрустящие овощи — хороший перекус.",w:""},
+ {id:"ketchup",n:"Кетчуп или сладкий соус",c:"acid",s:1,a:1,k:false,al:["кетчуп","барбекю","соус"],t:"В соусах часто есть сахар и кислота. Обычно едят с едой, это лучше.",w:""},
+ {id:"gum0",n:"Жвачка без сахара",c:"neutral",s:0,a:0,k:false,al:["жвачка","жевательная резинка","орбит","дирол"],t:"Может усиливать слюноотделение. Но она не заменяет чистку зубов.",w:"",good:true},
+ {id:"gum",n:"Жвачка с сахаром",c:"sweets",s:2,a:0,k:true,al:["бабл гам","бубль гум","турбо"],t:"Сахар держится во рту долго. Выбирай жвачку без сахара.",w:"Жвачка без сахара"},
+ {id:"tonic",n:"Тоник",c:"drinks",s:2,a:2,k:false,al:["швепс","schweppes","биттер лемон"],t:"Горький вкус обманчив: в тонике есть и сахар, и кислота.",w:"Минеральная вода"},
+ {id:"bubble",n:"Бабл ти",c:"drinks",s:2,a:0,k:true,al:["bubble tea","боба","тапиока"],t:"Сладкий напиток плюс липкие шарики тапиоки. Лучше как редкое угощение.",w:"Чай с молоком без сахара"},
+ {id:"cancoffee",n:"Холодный кофе в бутылке",c:"drinks",s:2,a:0,k:false,al:["кофе в банке","айс латте","холодный кофе"],t:"В готовом холодном кофе часто много сахара. Смотри состав.",w:"Кофе без сахара"},
+ {id:"hotchoc",n:"Горячий шоколад",c:"drinks",s:2,a:0,k:false,al:[],t:"Много сахара. Лучше как десерт после еды.",w:"Молоко или чай без сахара"},
+ {id:"kissel",n:"Кисель",c:"drinks",s:2,a:0,k:false,al:[],t:"Обычно сладкий и густой. Пей с едой.",w:"Компот без сахара"},
+ {id:"smoothie",n:"Смузи",c:"drinks",s:1,a:1,k:false,al:["фруктовый коктейль"],t:"В смузи сахар из фруктов становится свободным, как в соке. Не пей его маленькими глотками весь день.",w:"Целые фрукты"},
+ {id:"kombucha",n:"Комбуча",c:"acid",s:1,a:2,k:false,al:["чайный гриб"],t:"Ферментированный и кислый напиток. Пей с едой, не держи во рту.",w:"Вода"},
+ {id:"tomjuice",n:"Томатный сок",c:"acid",s:0,a:1,k:false,al:[],t:"Сахара мало, кислота умеренная. Неплохой вариант.",w:""},
+ {id:"milktea",n:"Чай с молоком без сахара",c:"neutral",s:0,a:0,k:false,al:["чай с молоком","сүтті шай","казахский чай"],t:"Без сахара риск низкий. Если добавляешь сахар или варенье, это уже сладкий эпизод.",w:""},
+ {id:"kumys",n:"Кумыс или шубат",c:"dairy",s:0,a:1,k:false,al:["кумыс","шубат"],t:"Кисломолочный напиток со слабой кислотностью. Сахара почти нет.",w:""},
+ {id:"kurt",n:"Курт",c:"dairy",s:0,a:1,k:false,al:["құрт","иримшик"],t:"Солёный и немного кислый, сахара нет. Если долго рассасывать, после выпей воды.",w:""},
+ {id:"chakchak",n:"Чак-чак",c:"sweets",s:2,a:0,k:true,al:["чак чак"],t:"Тесто в мёде: много сахара и очень липко. После еды и водой запить.",w:""},
+ {id:"halva",n:"Халва",c:"sweets",s:2,a:0,k:true,al:["щербет"],t:"Сладкая и липкая. Лучше небольшой кусочек к чаю после еды.",w:"Орехи"},
+ {id:"kozinak",n:"Козинак",c:"sweets",s:2,a:0,k:true,al:["козинаки","грильяж"],t:"Орехи в карамели: сахар плюс липкость.",w:"Просто орехи"},
+ {id:"baklava",n:"Пахлава",c:"sweets",s:2,a:0,k:true,al:["баклава"],t:"Много сиропа и мёда. Редкое угощение после еды.",w:""},
+ {id:"zefir",n:"Зефир или пастила",c:"sweets",s:2,a:0,k:false,al:["зефир","пастила","маршмеллоу"],t:"Почти чистый сахар. Лучше как десерт, а не перекус.",w:""},
+ {id:"sorbet",n:"Фруктовый лёд",c:"sweets",s:2,a:1,k:false,al:["сорбет","фруктовый лед"],t:"Сахар и фруктовая кислота, и его долго держат во рту.",w:"Свежие ягоды"},
+ {id:"croissant",n:"Круассан",c:"sweets",s:1,a:0,k:true,al:["слойка","синнабон","булочка с корицей"],t:"Сладкое тесто застревает между зубами. Лучше с завтраком, чем перекусом.",w:""},
+ {id:"pancake",n:"Блины или оладьи",c:"meals",s:1,a:0,k:true,al:["блины","оладьи","панкейки","блинчики"],t:"Сами по себе не очень сладкие, но со сгущёнкой, вареньем или сиропом сахара много.",w:"Блины со сметаной или творогом"},
+ {id:"baursak",n:"Баурсаки",c:"meals",s:0,a:0,k:true,al:["баурсак","бауырсақ"],t:"Сахара мало, но тесто застревает между зубами. Хорошо с едой и чаем без сахара.",w:""},
+ {id:"cereal",n:"Сладкие хлопья",c:"snacks",s:2,a:0,k:true,al:["хлопья","кукурузные хлопья","подушечки","готовый завтрак","шарики шоколадные"],t:"В готовых завтраках часто много сахара, и они прилипают к зубам.",w:"Овсянка с фруктами"},
+ {id:"caramcorn",n:"Карамельный попкорн",c:"snacks",s:2,a:0,k:true,al:["сладкий попкорн"],t:"Карамель застревает в зубах. Солёный попкорн без карамели лучше.",w:"Солёный попкорн"},
+ {id:"fries",n:"Картошка фри",c:"meals",s:0,a:0,k:true,al:["фри","картофель фри"],t:"Сахара нет, но крахмал задерживается на зубах. После еды выпей воды.",w:""},
+ {id:"oat",n:"Овсянка без сахара",c:"meals",s:0,a:0,k:false,al:["каша","овсянка","гречка"],t:"Хороший завтрак. Если добавляешь сахар, мёд или варенье, риск растёт.",w:""},
+ {id:"sweetporr",n:"Сладкая каша",c:"meals",s:1,a:0,k:false,al:["манка","манная каша","каша с сахаром","рисовая каша"],t:"Добавленный сахар. Попробуй класть меньше или заменить на фрукты.",w:"Каша с ягодами"},
+ {id:"bread",n:"Белый хлеб",c:"meals",s:0,a:0,k:true,al:["батон","лепёшка","лепешка","нан","тандыр нан","хлеб"],t:"Крахмал из мягкого хлеба может задерживаться на зубах. С едой это нормально.",w:""},
+ {id:"plov",n:"Плов",c:"meals",s:0,a:0,k:false,al:["палов"],t:"Обычная еда без свободных сахаров. Главное — не забыть вечернюю чистку.",w:""},
+ {id:"beshbarmak",n:"Бешбармак",c:"meals",s:0,a:0,k:false,al:["беш","ет"],t:"Мясо и тесто без сахара, низкий риск.",w:""},
+ {id:"manty",n:"Манты или пельмени",c:"meals",s:0,a:0,k:false,al:["манты","пельмени","самса","чебурек","беляш"],t:"Без сахара и кислоты. Низкий риск.",w:""},
+ {id:"lagman",n:"Лагман",c:"meals",s:0,a:0,k:false,al:[],t:"Обычная еда, риск низкий.",w:""},
+ {id:"soup",n:"Суп",c:"meals",s:0,a:0,k:false,al:["борщ","щи","шорпа","сорпа"],t:"Обычная еда, риск низкий.",w:""},
+ {id:"meat",n:"Мясо, курица, рыба",c:"meals",s:0,a:0,k:false,al:["курица","рыба","мясо","котлета","шашлык"],t:"Без сахара и кислоты. Нейтрально для зубов.",w:""},
+ {id:"rice",n:"Рис или макароны",c:"meals",s:0,a:0,k:false,al:["рис","макароны","спагетти","паста"],t:"Обычный гарнир, риск низкий.",w:""},
+ {id:"pizza",n:"Пицца",c:"meals",s:0,a:1,k:false,al:[],t:"Томатный соус слегка кислый, но в целом риск невысокий.",w:""},
+ {id:"fastfood",n:"Бургер или шаурма",c:"meals",s:1,a:1,k:false,al:["бургер","шаурма","шаверма","хот-дог","донер","фастфуд"],t:"Сладкие соусы и булка добавляют сахар. Сама еда не страшна, а вот газировка к ней — да.",w:"Взять к нему воду вместо газировки"},
+ {id:"pickles",n:"Соленья и маринады",c:"acid",s:0,a:2,k:false,al:["соленья","маринад","солёные огурцы","соленые огурцы","квашеная капуста","корейская морковь"],t:"Уксус кислый. Ешь с основной едой.",w:""},
+ {id:"pineapple",n:"Ананас",c:"fruit",s:0,a:1,k:false,al:["манго"],t:"Сладкий и кислый фрукт, но целым он нормальная часть рациона.",w:""},
+ {id:"sourberry",n:"Кислые ягоды",c:"fruit",s:0,a:1,k:false,al:["вишня","смородина","клюква","крыжовник","облепиха"],t:"Немного кислоты, но целые ягоды — хороший выбор.",w:""},
+ {id:"melon",n:"Арбуз или дыня",c:"fruit",s:0,a:0,k:false,al:["арбуз","дыня"],t:"Много воды, мало кислоты. Хороший летний перекус.",w:""},
+ {id:"granola0",n:"Мюсли без сахара",c:"snacks",s:0,a:0,k:false,al:["мюсли"],t:"Без сахара и глазури это нормальный вариант. Проверь состав.",w:""},
+ {id:"eggboil",n:"Варёное яйцо",c:"breakfast",s:0,a:0,k:false,al:["яйцо","яйца","яйцо вкрутую","яйцо всмятку","яйцо пашот","пашот","перепелиные яйца"],t:"Без сахара и кислоты. Один из самых спокойных для зубов завтраков.",w:""},
+ {id:"eggfry",n:"Яичница",c:"breakfast",s:0,a:0,k:false,al:["глазунья","жареные яйца","яичница с колбасой","яичница с помидорами"],t:"Яйца не дают свободных сахаров. Если пьёшь к ней сладкий чай или сок, сахар считается отдельно.",w:""},
+ {id:"omelet",n:"Омлет",c:"breakfast",s:0,a:0,k:false,al:["скрэмбл","болтунья","омлет с овощами","омлет с сыром"],t:"Низкий риск. С овощами и сыром ещё лучше.",w:""},
+ {id:"shakshuka",n:"Шакшука",c:"breakfast",s:0,a:1,k:false,al:["яйца в томате"],t:"Томаты немного кислые, но в целом риск низкий.",w:""},
+ {id:"sandcheese",n:"Бутерброд с сыром или маслом",c:"breakfast",s:0,a:0,k:true,al:["бутерброд","тост с маслом","хлеб с маслом","бутерброд с сыром"],t:"Сахара нет, но мягкий хлеб может застревать между зубами.",w:""},
+ {id:"sandsaus",n:"Бутерброд с колбасой",c:"breakfast",s:0,a:0,k:true,al:["колбаса","сосиски","сосиска","ветчина","бутерброд с колбасой"],t:"Для зубов риск низкий: сахара почти нет.",w:""},
+ {id:"toastjam",n:"Тост с вареньем или шоколадной пастой",c:"breakfast",s:2,a:0,k:true,al:["тост с вареньем","тост с нутеллой","хлеб с вареньем","бутерброд с вареньем"],t:"Сахар плюс липкость. Лучше съесть за завтраком целиком, чем растягивать.",w:"Тост с сыром или яйцом"},
+ {id:"toastpb",n:"Тост с арахисовой пастой",c:"breakfast",s:1,a:0,k:true,al:["арахисовая паста","арахисовое масло"],t:"В пасте бывает добавленный сахар, и она липкая. Выбирай без сахара.",w:""},
+ {id:"avotoast",n:"Тост с авокадо",c:"breakfast",s:0,a:0,k:false,al:["авокадо"],t:"Нейтральный завтрак для зубов.",w:""},
+ {id:"syrniki",n:"Сырники",c:"breakfast",s:1,a:0,k:false,al:["сырник","творожная запеканка","запеканка"],t:"В тесто обычно кладут немного сахара. Со сметаной лучше, чем со сгущёнкой или вареньем.",w:"Сырники со сметаной"},
+ {id:"tvorog",n:"Творог со сметаной",c:"breakfast",s:0,a:0,k:false,al:["творог со сметаной","творог с ягодами"],t:"Без добавленного сахара риск низкий. С сахаром или вареньем он уже выше.",w:""},
+ {id:"oatfruit",n:"Овсянка с фруктами",c:"breakfast",s:0,a:0,k:false,al:["овсянка с яблоком","овсянка с бананом","каша с фруктами"],t:"Хороший вариант: сладость из целых фруктов, а не из сахара.",w:""},
+ {id:"oathoney",n:"Овсянка с мёдом или вареньем",c:"breakfast",s:2,a:0,k:true,al:["овсянка с мёдом","овсянка с медом","овсянка с вареньем","каша с вареньем"],t:"Мёд и варенье — свободные сахара. Попробуй заменить на фрукты.",w:"Овсянка с фруктами"},
+ {id:"cerealmilk",n:"Хлопья с молоком",c:"breakfast",s:2,a:0,k:true,al:["хлопья с молоком","подушечки с молоком"],t:"Готовые хлопья часто очень сладкие и размокают, прилипая к зубам.",w:"Овсянка или мюсли без сахара"},
+ {id:"waffles",n:"Вафли или панкейки с сиропом",c:"breakfast",s:2,a:0,k:true,al:["бельгийские вафли","панкейки с сиропом","кленовый сироп"],t:"Сироп даёт много сахара. Это скорее десерт, чем ежедневный завтрак.",w:"Панкейки с ягодами и сметаной"},
+ {id:"yogurtbowl",n:"Йогурт с гранолой",c:"breakfast",s:1,a:0,k:true,al:["гранола с йогуртом","боул"],t:"Магазинная гранола часто сладкая и липкая. Натуральный йогурт с орехами — вариант лучше.",w:"Натуральный йогурт с орехами и ягодами"}
+];
+var byId={};P.forEach(function(p){byId[p.id]=p});
+function norm(s){return (s||"").toLowerCase().replace(/ё/g,"е").replace(/[«»"']/g,"").trim()}
+function find(q){
+  q=norm(q); if(!q) return null;
+  var best=null;
+  P.forEach(function(p){
+    var names=[p.n].concat(p.al).map(norm);
+    names.forEach(function(nm){
+      var sc= nm===q?3 : (nm.indexOf(q)===0?2 : (nm.indexOf(q)>-1||q.indexOf(nm)>-1)?1:0);
+      if(sc && (!best||sc>best.sc)) best={p:p,sc:sc};
+    });
+  });
+  return best?best.p:null;
+}
+var dl=document.getElementById("productList");
+P.forEach(function(p){var o=document.createElement("option");o.value=p.n;dl.appendChild(o)});
+
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+// ---------- оценка ----------
+function score(p,freq){
+  var v=p.s + (p.a===2?2:p.a===1?0.5:0) + (p.k?1:0);
+  if(freq==="often" && v>0) v+=1;
+  if(freq==="rare" && v>=3) v-=0.5;
+  return v;
+}
+function level(v){
+  if(v<1) return {cls:"lv-low",txt:"Низкий потенциальный риск"};
+  if(v<3) return {cls:"lv-mid",txt:"Умеренный потенциальный риск"};
+  return {cls:"lv-high",txt:"Повышенный потенциальный риск"};
+}
+var LBL={s:["нет","средне","много"],a:["нет","слабая","выраженная"]};
+var FREQ_T={rare:"иногда",daily:"раз в день",often:"несколько раз в день"};
+function renderResult(p,query,freq,ctx){
+  var el=document.getElementById("result");
+  if(!p){
+    el.innerHTML='<div class="result"><div class="result-head"><span class="level lv-na"><i></i>Данных недостаточно</span><h2>'+(query?esc(query):"Выбери продукт")+'</h2><p class="muted">'+(query?"Такого продукта пока нет в нашей базе, поэтому мы не будем угадывать оценку. Попробуй похожее название или выбери из категорий.":"Введи название или нажми на категорию слева.")+'</p></div></div>';
+    return;
+  }
+  var v=score(p,freq), L=level(v);
+  var advice=[];
+  advice.push(p.t);
+  if(freq==="often" && v>0) advice.push("Ты указал, что ешь это несколько раз в день. Частота важнее количества: каждый раз зубы получают новую «атаку» сахара или кислоты.");
+  if(ctx==="snack" && (p.s>0||p.a>0)) advice.push("Как перекус это действует сильнее. Если можно, перенеси на основной приём пищи, а между едой пей воду.");
+  if(ctx==="meal" && (p.s>0||p.a>0)) advice.push("Во время еды — хороший вариант. Это не отменяет сахар и кислоту, но снижает число «атак» за день.");
+  if(p.a===2) advice.push("После кислого не чисти зубы сразу: подожди около часа.");
+  var html='<div class="result">'+
+   '<div class="result-head"><p class="eyebrow">'+esc(CATS[p.c])+' · '+FREQ_T[freq]+', '+(ctx==="meal"?"во время еды":"перекус")+'</p>'+
+   '<h2>'+esc(p.n)+'</h2><span class="level '+L.cls+'"><i></i>'+L.txt+'</span>'+(p.good?'<p class="small" style="color:var(--low);font-weight:600">Этот вариант может даже помогать зубам.</p>':'')+'</div>'+
+   '<div class="factors">'+
+     fac("Сахар",p.s,LBL.s[p.s])+fac("Кислота",p.a,LBL.a[p.a])+
+     '<div class="factor"><span class="eyebrow">Липкость</span><div class="meter v'+(p.k?2:0)+'"><span></span><span></span></div><b>'+(p.k?"задерживается на зубах":"нет")+'</b></div>'+
+   '</div>'+
+   '<div class="result-body"><h3>Что делать</h3><ul>'+advice.map(function(a){return"<li>"+esc(a)+"</li>"}).join("")+'</ul>'+
+   (p.w?'<div class="swap"><span class="eyebrow">Можно заменить на</span><b>'+esc(p.w)+'</b></div>':'')+
+   '<p class="disclaimer">Это образовательная оценка факторов риска, а не диагноз. Правила для реального сервиса должен проверить стоматолог.</p></div></div>';
+  el.innerHTML=html;
+}
+function fac(name,v,t){return '<div class="factor"><span class="eyebrow">'+name+'</span><div class="meter v'+v+'"><span></span><span></span></div><b>'+t+'</b></div>'}
+
+var state={freq:"daily",ctx:"snack",cat:null,cur:byId.cola,q:""};
+function seg(id,key){
+  var g=document.getElementById(id);
+  g.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;
+    state[key]=b.dataset.v;[].forEach.call(g.children,function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});
+    renderResult(state.cur,state.q,state.freq,state.ctx);});
+}
+seg("freqSeg","freq");seg("ctxSeg","ctx");
+var catChips=document.getElementById("catChips"),catItems=document.getElementById("catItems");
+Object.keys(CATS).forEach(function(k){var b=document.createElement("button");b.type="button";b.className="chip";b.textContent=CATS[k];b.dataset.c=k;b.setAttribute("aria-pressed","false");catChips.appendChild(b)});
+catChips.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;
+  state.cat= state.cat===b.dataset.c?null:b.dataset.c;
+  [].forEach.call(catChips.children,function(x){x.setAttribute("aria-pressed",x.dataset.c===state.cat?"true":"false")});
+  catItems.innerHTML="";
+  if(state.cat) P.filter(function(p){return p.c===state.cat}).forEach(function(p){var i=document.createElement("button");i.type="button";i.className="chip";i.style.borderStyle="dashed";i.textContent=p.n;i.dataset.id=p.id;catItems.appendChild(i)});
+});
+catItems.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var p=byId[b.dataset.id];
+  document.getElementById("q").value=p.n;state.cur=p;state.q=p.n;renderResult(p,p.n,state.freq,state.ctx);});
+document.getElementById("checkForm").addEventListener("submit",function(e){e.preventDefault();var q=document.getElementById("q").value;state.q=q;state.cur=find(q);renderResult(state.cur,q,state.freq,state.ctx);});
+document.getElementById("q").value=state.cur.n;state.q=state.cur.n;
+renderResult(state.cur,state.q,state.freq,state.ctx);
+document.getElementById("homeSearch").addEventListener("submit",function(e){e.preventDefault();var q=document.getElementById("homeQ").value;
+  if(!q.trim())return; document.getElementById("q").value=q;state.q=q;state.cur=find(q);renderResult(state.cur,q,state.freq,state.ctx);location.hash="check";});
+
+// ---------- советы ----------
+var TIPS=["После чистки выплюнь пасту, но не полощи рот водой: так фтор дольше остаётся на зубах.","Между приёмами пищи лучший напиток — обычная вода.","Сильнее давить щёткой не значит чище. Важнее пройти все поверхности мягкими движениями.","После кислого напитка подожди около часа, прежде чем чистить зубы.","Щётка не достаёт между зубами. Для этого нужна нить или межзубный ёршик раз в день.","Держи щётку под углом примерно 45° к линии дёсен.","Частота сладкого важнее количества: десять маленьких перекусов хуже одного десерта после обеда.","Жвачка без сахара после еды помогает слюне, но не заменяет щётку."];
+var ti=(new Date().getDate())%TIPS.length;
+function showTip(){document.getElementById("tipText").textContent=TIPS[ti]}
+showTip();document.getElementById("nextTip").addEventListener("click",function(){ti=(ti+1)%TIPS.length;showTip()});
+
+// ---------- схема зубов ----------
+var NS="http://www.w3.org/2000/svg",svg=document.getElementById("jawSvg");
+function mk(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e}
+var CX=160,CY=200,RX=118,RY=160,N=14;
+function arc(rx,ry){return "M"+(CX-rx)+","+CY+" A"+rx+","+ry+" 0 0 1 "+(CX+rx)+","+CY}
+function buildJaw(jaw){
+  var g=mk("g",{"data-jaw":jaw});
+  if(jaw==="lower") g.setAttribute("transform","translate(0,430) scale(1,-1)");
+  mk("path",{d:arc(RX+15,RY+15),class:"gum","data-z":"gum"},g);
+  mk("path",{d:arc(RX+26,RY+26),class:"zone","data-z":"outer"},g);
+  mk("path",{d:arc(RX-26,RY-26),class:"zone","data-z":"inner"},g);
+  for(var i=0;i<N;i++){
+    var t=Math.PI+(i+.5)/N*Math.PI, x=CX+RX*Math.cos(t), y=CY+RY*Math.sin(t);
+    var d=Math.abs(i-(N-1)/2), w=12+d*1.5, h=16+d*1.1;
+    var rot=t*180/Math.PI+90;
+    mk("rect",{x:x-w/2,y:y-h/2,width:w,height:h,rx:w*.38,class:"tooth","data-z":"chew",transform:"rotate("+rot.toFixed(1)+" "+x.toFixed(1)+" "+y.toFixed(1)+")"},g);
+  }
+  for(var k=1;k<N;k++){
+    var tt=Math.PI+k/N*Math.PI, c=Math.cos(tt), s=Math.sin(tt);
+    mk("line",{x1:CX+(RX-9)*c,y1:CY+(RY-9)*s,x2:CX+(RX+9)*c,y2:CY+(RY+9)*s,class:"gap-line","data-z":"gaps"},g);
+  }
+}
+buildJaw("upper");buildJaw("lower");
+var t1=mk("text",{x:CX,y:205,"text-anchor":"middle",class:"jaw-label"});t1.textContent="ВЕРХНЯЯ ЧЕЛЮСТЬ";
+var t2=mk("text",{x:CX,y:236,"text-anchor":"middle",class:"jaw-label"});t2.textContent="НИЖНЯЯ ЧЕЛЮСТЬ";
+
+var STEPS=[
+ {k:"prep",title:"Подготовка",sec:0,jaw:null,z:[],text:"Возьми щётку и пасту с фтором (1000–1500 ppm, это написано на тюбике). Для взрослого хватит полоски размером с горошину.",eb:"Шаг перед стартом"},
+ {k:"uo",title:"Верх: наружная сторона",sec:20,jaw:"upper",z:["outer"],text:"Поставь щётку под углом около 45° к линии дёсен. Короткими мягкими движениями пройди все зубы снаружи, от одного края к другому.",eb:"Верхняя челюсть"},
+ {k:"ui",title:"Верх: внутренняя сторона",sec:20,jaw:"upper",z:["inner"],text:"Теперь сторона со стороны нёба. Передние зубы удобнее чистить вертикально, кончиком щётки.",eb:"Верхняя челюсть"},
+ {k:"uc",title:"Верх: жевательные поверхности",sec:15,jaw:"upper",z:["chew"],text:"Пройди верхушки зубов, особенно дальние: в бороздках задерживается налёт.",eb:"Верхняя челюсть"},
+ {k:"lo",title:"Низ: наружная сторона",sec:20,jaw:"lower",z:["outer"],text:"Тот же алгоритм для нижних зубов: угол 45°, мягкие короткие движения по наружной стороне.",eb:"Нижняя челюсть"},
+ {k:"li",title:"Низ: внутренняя сторона",sec:20,jaw:"lower",z:["inner"],text:"Сторона со стороны языка. Передние зубы снова вертикально.",eb:"Нижняя челюсть"},
+ {k:"lc",title:"Низ: жевательные поверхности",sec:15,jaw:"lower",z:["chew"],text:"Верхушки нижних зубов, не забудь самые дальние.",eb:"Нижняя челюсть"},
+ {k:"gum",title:"Линия дёсен",sec:10,jaw:"both",z:["gum"],text:"Ещё раз аккуратно пройди вдоль края дёсен сверху и снизу. Не дави сильно: важнее тщательность.",eb:"Обе челюсти"},
+ {k:"spit",title:"Выплюнь, но не полощи",sec:0,jaw:null,z:[],text:"Выплюнь остатки пасты. Сразу полоскать рот водой не нужно: так смывается фтор.",eb:"Две минуты прошли"},
+ {k:"gaps",title:"Между зубами",sec:0,jaw:"both",z:["gaps"],text:"Раз в день очищай промежутки нитью или межзубным ёршиком. Аккуратно заведи нить между зубами и проведи вдоль каждого зуба вверх-вниз.",eb:"Раз в день"},
+ {k:"done",title:"Готово!",sec:0,jaw:null,z:[],text:"",eb:"Финал"}
+];
+var TOTAL=STEPS.reduce(function(a,s){return a+s.sec},0);
+var gi=0,left=0,timer=null,elapsed=0;
+var stepsList=document.getElementById("stepsList");
+STEPS.forEach(function(s,i){var li=document.createElement("li");li.innerHTML='<span class="n">'+(i+1)+'</span><span>'+esc(s.title)+'</span><span class="sec">'+(s.sec?s.sec+" с":"")+'</span>';li.addEventListener("click",function(){go(i)});li.style.cursor="pointer";stepsList.appendChild(li)});
+function fmt(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function elapsedBefore(i){var a=0;for(var j=0;j<i;j++)a+=STEPS[j].sec;return a}
+function paint(){
+  var s=STEPS[gi];
+  svg.querySelectorAll(".on").forEach(function(e){e.classList.remove("on")});
+  svg.querySelectorAll("g[data-jaw]").forEach(function(g){
+    var j=g.getAttribute("data-jaw"), active= s.jaw==="both"||s.jaw===j;
+    g.classList.toggle("dim", !!s.jaw && !active);
+    if(active) s.z.forEach(function(z){g.querySelectorAll('[data-z="'+z+'"]').forEach(function(e){e.classList.add("on")})});
+  });
+  document.getElementById("stepEyebrow").textContent="Шаг "+(gi+1)+" из "+STEPS.length+" · "+s.eb;
+  document.getElementById("stepTitle").textContent=s.title;
+  document.getElementById("stepText").textContent=s.text;
+  var ex=document.getElementById("stepExtra");
+  if(s.k==="done"){
+    document.getElementById("stepText").textContent="Ты прошёл всю инструкцию. Короткий чек-лист:";
+    ex.innerHTML='<ul class="checklist"><li>Паста с фтором, 2 минуты</li><li>Снаружи, внутри, жевательные, линия дёсен</li><li>Выплюнул, не полоскал</li><li>Раз в день нить или ёршик</li></ul><p class="small muted" style="margin-top:10px">Совет: '+esc(TIPS[ti])+'</p>';
+  } else ex.innerHTML="";
+  [].forEach.call(stepsList.children,function(li,i){li.className= i===gi?"cur":(i<gi?"done":"")});
+  var el=elapsedBefore(gi)+(s.sec? s.sec-left:0);
+  var rem=TOTAL-el;
+  document.getElementById("timeLeft").textContent=fmt(rem);
+  document.getElementById("timeLabel").textContent= s.sec? ("на этот шаг: "+fmt(left)+" · всего осталось") : (gi===0?"на всю чистку":"чистка щёткой завершена");
+  document.getElementById("progBar").style.width=(el/TOTAL*100)+"%";
+  document.getElementById("prevBtn").disabled= gi===0;
+  document.getElementById("nextBtn").disabled= gi===STEPS.length-1;
+  var pb=document.getElementById("playBtn");
+  pb.textContent= timer? "Пауза" : (gi===0&&left===0?"Начать":(s.sec?"Продолжить":"Далее"));
+  document.getElementById("guideRoot").classList.toggle("running",!!timer);
+  syncMusic();
+}
+function go(i){gi=Math.max(0,Math.min(STEPS.length-1,i));left=STEPS[gi].sec;if(!STEPS[gi].sec)stop();paint()}
+function stop(){if(timer){clearInterval(timer);timer=null}}
+function tick(){
+  left-=1;
+  if(left<=0){ if(gi<STEPS.length-1){gi++;left=STEPS[gi].sec; if(!STEPS[gi].sec) stop();} }
+  paint();
+}
+function play(){
+  if(timer){stop();paint();return}
+  if(gi===0||!STEPS[gi].sec){ if(gi===STEPS.length-1){go(0);return} go(gi+1); if(!STEPS[gi].sec){paint();return} }
+  if(left<=0) left=STEPS[gi].sec;
+  timer=setInterval(tick,1000);paint();
+}
+document.getElementById("playBtn").addEventListener("click",play);
+document.getElementById("nextBtn").addEventListener("click",function(){var r=!!timer;stop();go(gi+1);if(r&&STEPS[gi].sec)timer=setInterval(tick,1000);paint()});
+document.getElementById("prevBtn").addEventListener("click",function(){var r=!!timer;stop();go(gi-1);if(r&&STEPS[gi].sec)timer=setInterval(tick,1000);paint()});
+document.getElementById("resetBtn").addEventListener("click",function(){stop();go(0)});
+go(0);
+
+// ---------- музыка ----------
+// собственные мелодии, синтезируются в браузере (Web Audio)
+var TUNES=[
+ {n:"Утренний бит",bpm:116,w:"square",lead:[72,0,76,0,79,0,76,0,74,0,77,0,81,0,79,0, 72,0,76,0,79,0,84,0,83,0,79,0,76,0,74,0],bass:[48,0,0,0,48,0,0,0,53,0,0,0,55,0,0,0]},
+ {n:"Пенный фанк",bpm:104,w:"triangle",lead:[67,0,70,72,0,70,67,0,65,0,67,0,70,0,0,0, 67,0,70,72,0,74,72,0,70,0,67,0,65,0,67,0],bass:[43,0,43,0,0,46,0,48,41,0,41,0,0,43,0,46]},
+ {n:"Мятный чиптюн",bpm:132,w:"square",lead:[69,73,76,81,69,73,76,81,66,69,73,78,68,71,76,80, 69,73,76,81,76,73,69,73,66,69,73,78,71,68,64,68],bass:[45,0,0,0,45,0,0,0,42,0,0,0,40,0,0,0]},
+ {n:"Две минуты сияния",bpm:96,w:"triangle",lead:[76,0,0,79,0,0,81,0,79,0,76,0,74,0,72,0, 74,0,0,76,0,0,79,0,76,0,74,0,72,0,0,0],bass:[48,0,55,0,52,0,55,0,45,0,52,0,48,0,52,0]}
+];
+var tuneSel=document.getElementById("tuneSel");
+TUNES.forEach(function(t,i){var o=document.createElement("option");o.value=i;o.textContent=t.n;tuneSel.appendChild(o)});
+var AC=null,master=null,mInt=null,mStep=0,curTune=null;
+function hz(m){return 440*Math.pow(2,(m-69)/12)}
+function tone(f,dur,type,vol){var t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02)}
+function kick(){var t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(40,t+0.12);g.gain.setValueAtTime(0.35,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.15);o.connect(g);g.connect(master);o.start(t);o.stop(t+0.17)}
+function startMusic(){
+  if(mInt)return;
+  try{ if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.5;master.connect(AC.destination)} if(AC.state==="suspended")AC.resume(); }catch(e){return}
+  if(!curTune){curTune= tuneSel.value==="rnd"? TUNES[Math.floor(Math.random()*TUNES.length)] : TUNES[+tuneSel.value]; mStep=0}
+  var t=curTune, sx=60/t.bpm/4;
+  mInt=setInterval(function(){
+    var l=t.lead[mStep%t.lead.length], b=t.bass[mStep%t.bass.length];
+    if(l) tone(hz(l),sx*1.6,t.w,0.07);
+    if(b) tone(hz(b),sx*3,"triangle",0.16);
+    if(mStep%4===0) kick();
+    mStep++;
+  },sx*1000);
+  document.getElementById("eq").classList.add("play");
+  document.getElementById("nowPlaying").textContent="Играет: «"+t.n+"»";
+}
+function stopMusic(){
+  if(mInt){clearInterval(mInt);mInt=null}
+  var eq=document.getElementById("eq");if(eq)eq.classList.remove("play");
+}
+function syncMusic(){
+  var on=document.getElementById("musicOn").checked;
+  if(timer&&on) startMusic(); else stopMusic();
+  if(!timer && gi===0) curTune=null;
+}
+document.getElementById("musicOn").addEventListener("change",syncMusic);
+tuneSel.addEventListener("change",function(){stopMusic();curTune=null;syncMusic()});
+
+var HITS=[
+ "The Weeknd — Blinding Lights","Pharrell Williams — Happy","Mark Ronson ft. Bruno Mars — Uptown Funk","Dua Lipa — Levitating","Harry Styles — As It Was","Ed Sheeran — Shape of You","Imagine Dragons — Believer","BTS — Dynamite","Miley Cyrus — Flowers","Sabrina Carpenter — Espresso","ROSÉ & Bruno Mars — APT.","Lady Gaga & Bruno Mars — Die With A Smile","Justin Timberlake — Can't Stop the Feeling!","Ninety One — Ah!Yah!","SAINt JHN — Roses (Imanbek Remix)","Dimash — Love of Tired Swans","Kairat Nurtas — Ауырмайды жүрек","Miyagi & Andy Panda — Kosandra"
+];
+var hi=Math.floor(Math.random()*HITS.length);
+function showHit(){var h=HITS[hi];document.getElementById("hitName").textContent=h;var q=encodeURIComponent(h.replace(" — "," "));
+  document.getElementById("hitYt").href="https://www.youtube.com/results?search_query="+q;
+  document.getElementById("hitSp").href="https://open.spotify.com/search/"+q;}
+document.getElementById("hitNext").addEventListener("click",function(){var n;do{n=Math.floor(Math.random()*HITS.length)}while(n===hi&&HITS.length>1);hi=n;showHit()});
+showHit();
+
+// ---------- дневник ----------
+var KEY="smartsmile-diary-v1";
+var SLOTS={breakfast:"Завтрак",lunch:"Обед",dinner:"Ужин",snack:"Перекусы"};
+var EXAMPLE={example:true,items:[{slot:"breakfast",id:"sweettea"},{slot:"breakfast",id:"cheese"},{slot:"lunch",id:"water"},{slot:"snack",id:"choc"},{slot:"snack",id:"cola"},{slot:"snack",id:"apple"},{slot:"dinner",id:"juice"}],h:{am:true,pm:false,floss:false}};
+var day;
+function load(){try{var r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return JSON.parse(JSON.stringify(EXAMPLE))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(day))}catch(e){}}
+day=load();
+function itemP(it){return it.id?byId[it.id]:null}
+function dotColor(p){if(!p)return"var(--na)";var v=score(p,"daily");return v<1?"var(--low)":v<3?"var(--mid)":"var(--high)"}
+function renderDiary(){
+  document.getElementById("exampleNote").hidden=!day.example;
+  var box=document.getElementById("slots");box.innerHTML="";
+  Object.keys(SLOTS).forEach(function(sk){
+    var its=day.items.map(function(it,i){return{it:it,i:i}}).filter(function(x){return x.it.slot===sk});
+    var d=document.createElement("div");d.className="slot";
+    d.innerHTML='<h3>'+SLOTS[sk]+'<span>'+its.length+'</span></h3>'+(its.length?'<ul class="items">'+its.map(function(x){var p=itemP(x.it);return '<li><span class="dot" style="background:'+dotColor(p)+'" aria-hidden="true"></span><span class="nm">'+esc(p?p.n:x.it.name)+(p?'':' <span class="small muted">(нет в базе)</span>')+'</span><button type="button" data-i="'+x.i+'" aria-label="Удалить">×</button></li>'}).join("")+'</ul>':'<p class="empty">Пока пусто</p>');
+    box.appendChild(d);
+  });
+  var sweet=0,sdrink=0,acid=0,snacks=0,water=0,drinks=0;
+  day.items.forEach(function(it){var p=itemP(it);if(it.slot==="snack")snacks++;if(!p)return;
+    var isDrink=["drinks"].indexOf(p.c)>-1||["juice","diet","water","tea","lemontea","milk","cocoa","kombucha","tomjuice","milktea","kumys"].indexOf(p.id)>-1;
+    if(isDrink)drinks++;
+    if(p.s>0&&isDrink)sdrink++; else if(p.s>0)sweet++;
+    if(p.a>=2)acid++;
+    if(p.id==="water")water++;
+  });
+  var rows=[["Сладкие продукты",sweet],["Сладкие напитки",sdrink],["Кислые продукты и напитки",acid],["Перекусы между едой",snacks],["Вода",water]];
+  document.getElementById("stats").innerHTML='<div class="stat" style="background:var(--sunk)"><span class="eyebrow">Итог дня</span><span class="eyebrow">эпизоды</span></div>'+rows.map(function(r){return'<div class="stat"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>'}).join("");
+  ["am","pm","floss"].forEach(function(k){document.getElementById("h-"+k).checked=!!day.h[k]});
+  var msg=[];
+  if(!day.items.length){msg.push("Добавь первый продукт, и здесь появится итог дня.")}
+  else{
+    msg.push("Сегодня у тебя было "+plural(sweet+sdrink,"сладкий эпизод","сладких эпизода","сладких эпизодов")+" и "+plural(acid,"кислый продукт или напиток","кислых продукта или напитка","кислых продуктов или напитков")+".");
+    if(sweet+sdrink>=3||snacks>=3) msg.push("Попробуй завтра сократить число сладких перекусов и пить воду между приёмами пищи.");
+    else if(sweet+sdrink>0) msg.push("Неплохо. Старайся есть сладкое вместе с основной едой.");
+    else msg.push("Отличный день для зубов по части сахара.");
+  }
+  var hy=(day.h.am?1:0)+(day.h.pm?1:0);
+  msg.push(hy===2?"Обе чистки отмечены.":hy===1?"Отмечена одна чистка. Вечернюю можно сделать сегодня.":"Чистка пока не отмечена. Можно начать прямо сейчас.");
+  if(!day.h.floss) msg.push("И не забудь про нить или ёршик.");
+  document.getElementById("summary").innerHTML='<span class="eyebrow">Совет на завтра</span>'+msg.map(function(m){return"<p>"+esc(m)+"</p>"}).join("");
+}
+function plural(n,a,b,c){var m=n%10,h=n%100;return n+" "+(m===1&&h!==11?a:(m>=2&&m<=4&&(h<12||h>14))?b:c)}
+function unexample(){if(day.example){day={items:[],h:{am:false,pm:false,floss:false}}}}
+document.getElementById("addForm").addEventListener("submit",function(e){e.preventDefault();var q=document.getElementById("dq").value.trim();if(!q)return;
+  unexample();var p=find(q);day.items.push(p?{slot:document.getElementById("dslot").value,id:p.id}:{slot:document.getElementById("dslot").value,name:q});
+  document.getElementById("dq").value="";save();renderDiary();});
+document.getElementById("slots").addEventListener("click",function(e){var b=e.target.closest("button[data-i]");if(!b)return;day.example=false;day.items.splice(+b.dataset.i,1);save();renderDiary()});
+["am","pm","floss"].forEach(function(k){document.getElementById("h-"+k).addEventListener("change",function(e){day.example=false;day.h[k]=e.target.checked;save();renderDiary()})});
+document.getElementById("clearDay").addEventListener("click",function(){day={items:[],h:{am:false,pm:false,floss:false}};save();renderDiary()});
+renderDiary();
+
+// ---------- альтернативы ----------
+var SW=[["Сладкая газировка весь день","Вода, газированная вода без вкуса","Нет сахара и кислоты"],["Энергетик","Вода, чай без сахара","Энергетик сочетает сахар и кислоту"],["Сок между едой","Целый фрукт или стакан сока с едой","Сахар в соке свободный, во фрукте нет"],["Леденцы и ириски","Жвачка без сахара","Леденцы долго держат сахар во рту"],["Печенье или чипсы на перекус","Орехи, сыр, морковные палочки","Меньше крахмала, который застревает в зубах"],["Сладкий йогурт","Натуральный йогурт с ягодами","Меньше добавленного сахара"],["Сухофрукты как перекус","Свежие фрукты","Сухофрукты липкие и сладкие"],["Чай с двумя ложками сахара","Чай с половиной ложки, потом без","Привыкание идёт постепенно"]];
+document.getElementById("swapRows").innerHTML=SW.map(function(r){return"<tr><td>"+esc(r[0])+"</td><td><b>"+esc(r[1])+"</b></td><td class='muted'>"+esc(r[2])+"</td></tr>"}).join("");
+
+// ---------- завтраки ----------
+var BF=[
+ ["Яичница с хлебом",["eggfry","bread","tea"],"Простой и спокойный для зубов завтрак."],
+ ["Омлет с овощами",["omelet","veg","water"],"Без свободных сахаров, один из лучших вариантов."],
+ ["Варёные яйца и бутерброд с сыром",["eggboil","sandcheese","milktea"],"Хороший выбор, если чай без сахара."],
+ ["Овсянка с фруктами",["oatfruit","milk"],"Сладость из целых фруктов, а не из сахара."],
+ ["Сырники со сметаной",["syrniki","tea"],"Немного сахара в тесте. Без сгущёнки и варенья."],
+ ["Баурсаки с чаем и куртом",["baursak","milktea","kurt"],"Сахара почти нет, но тесто липкое. После завтрака выпей воды."],
+ ["Бутерброд с колбасой и сладкий кофе",["sandsaus","coffeesug"],"Сахар здесь только в кофе. Убери его, и риск станет ниже."],
+ ["Хлопья с молоком и сок",["cerealmilk","juice"],"Сладкие хлопья плюс кислый сок. Лучше заменить на овсянку и целый фрукт."],
+ ["Блины со сгущёнкой и какао",["pancake","honey","cocoa"],"Много сахара сразу. Пусть это будет завтрак выходного дня, а не каждый день."]
+];
+var bfList=document.getElementById("bfList");
+bfList.innerHTML=BF.map(function(b,i){
+  var mx=0;b[1].forEach(function(id){mx=Math.max(mx,score(byId[id],"daily"))});var L=level(mx);
+  return '<div class="card"><h3>'+esc(b[0])+'</h3><span class="level '+L.cls+'"><i></i>'+L.txt.replace(" потенциальный риск","")+'</span><p class="small">'+b[1].map(function(id){return esc(byId[id].n)}).join(" · ")+'</p><p class="small muted">'+esc(b[2])+'</p><button class="btn btn-ghost" type="button" data-bf="'+i+'" style="justify-self:start;min-height:40px;padding:8px 14px;font-size:14px">Добавить в дневник</button></div>';
+}).join("");
+bfList.addEventListener("click",function(e){var b=e.target.closest("button[data-bf]");if(!b)return;unexample();
+  BF[+b.dataset.bf][1].forEach(function(id){day.items.push({slot:"breakfast",id:id})});save();renderDiary();location.hash="diary";});
+
+// ---------- мифы ----------
+var MY=[["Если чистить зубы один раз в день, этого достаточно","ВОЗ и ADA рекомендуют чистить зубы дважды в день пастой с фтором, по две минуты."],["Чем сильнее давишь щёткой, тем чище","Важно пройти все поверхности мягкими короткими движениями. Сильное давление не делает чистку лучше."],["После пасты нужно хорошо прополоскать рот","NHS советует выплюнуть пасту и не полоскать рот сразу, чтобы фтор не смылся."],["Вредны только конфеты","Свободные сахара есть в газировке, соках, сладком чае, йогуртах, соусах. И важна частота, а не только продукт."],["Если без сахара, значит безопасно для эмали","Кислоты могут повреждать эмаль даже без сахара. Пример — газировка «зеро»."],["Щётка заменяет чистку между зубами","Щётка не достаёт в промежутки. ADA рекомендует нить или межзубный ёршик каждый день."]];
+var ml=document.getElementById("mythList");
+MY.forEach(function(m,i){var d=document.createElement("div");d.className="myth";
+  d.innerHTML='<button type="button" aria-expanded="false" aria-controls="ma'+i+'"><span class="tag m">Миф</span><span class="q">«'+esc(m[0])+'»</span><span class="hint">Показать факт</span></button><div class="a" id="ma'+i+'" hidden><span class="tag f">Факт</span><p>'+esc(m[1])+'</p></div>';
+  var b=d.querySelector("button"),a=d.querySelector(".a");
+  b.addEventListener("click",function(){var o=a.hidden;a.hidden=!o;b.setAttribute("aria-expanded",o?"true":"false");b.querySelector(".hint").textContent=o?"Скрыть":"Показать факт"});
+  ml.appendChild(d);});
+
+// ---------- навигация ----------
+var VIEWS=["home","guide","check","diary","swaps","myths","dentist","about"];
+function route(){
+  var h=(location.hash||"").replace("#","");if(VIEWS.indexOf(h)<0)h="home";
+  VIEWS.forEach(function(v){document.getElementById("v-"+v).hidden= v!==h});
+  document.querySelectorAll(".nav a").forEach(function(a){if(a.getAttribute("href")==="#"+h)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  if(h!=="guide"){stop();paint();}
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);route();
+})();
+</script>
+
+</body>
+</html>

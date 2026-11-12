@@ -247,6 +247,8 @@ tr:last-child td{border-bottom:0}
 .music select{width:auto;min-height:40px;padding:8px 12px;font-size:15px}
 .hit{background:var(--primary-soft);border-radius:12px;padding:14px;display:grid;gap:8px}
 .hit b{font-size:17px}
+.yt{width:100%;aspect-ratio:16/9;max-width:100%;border-radius:12px;overflow:hidden;background:var(--sunk)}
+.yt iframe,.yt #ytPlayer{width:100%;height:100%;border:0;display:block}
 .hit .links{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-weight:600;font-size:15px}
 .eq{display:inline-flex;gap:3px;align-items:flex-end;height:16px}
 .eq span{width:4px;background:var(--accent);height:30%;border-radius:2px}
@@ -379,20 +381,15 @@ tr:last-child td{border-bottom:0}
         <button class="btn btn-ghost" id="resetBtn" type="button">Заново</button>
       </div>
       <div class="music">
-        <div class="row" style="justify-content:space-between">
-          <label class="sw"><input type="checkbox" id="musicOn" checked> Музыка во время чистки <span class="eq" id="eq" aria-hidden="true"><span></span><span></span><span></span></span></label>
-          <select id="tuneSel" aria-label="Мелодия"><option value="rnd">Случайная мелодия</option></select>
-        </div>
-        <p class="small muted" id="nowPlaying">Нажми «Начать» — мелодия играет, пока идёт таймер, и замолкает через 2 минуты.</p>
         <div class="hit">
-          <span class="eyebrow">Или случайный хит</span>
+          <span class="eyebrow">Музыка для чистки · случайный хит</span>
           <b id="hitName"></b>
+          <div class="yt" id="ytWrap"><div id="ytPlayer"></div></div>
           <div class="links">
-            <a id="hitYt" href="#" target="_blank" rel="noopener">Слушать на YouTube</a>
-            <a id="hitSp" href="#" target="_blank" rel="noopener">Spotify</a>
             <button class="chip" id="hitNext" type="button">Другая песня</button>
+            <a id="hitYt" href="#" target="_blank" rel="noopener" class="small">Открыть на YouTube</a>
           </div>
-          <p class="small muted">Песня откроется в новой вкладке. Включи её, вернись сюда и чисти зубы до конца припева — обычно это как раз около 2 минут.</p>
+          <p class="small muted">Нажми «Начать» — включится случайная песня и будет играть, пока идёт таймер. Пауза таймера ставит на паузу и музыку.</p>
         </div>
       </div>
       <ol class="steps-list" id="stepsList"></ol>
@@ -881,56 +878,52 @@ document.getElementById("prevBtn").addEventListener("click",function(){var r=!!t
 document.getElementById("resetBtn").addEventListener("click",function(){stop();go(0)});
 go(0);
 
-// ---------- музыка ----------
-// собственные мелодии, синтезируются в браузере (Web Audio)
-var TUNES=[
- {n:"Утренний бит",bpm:116,w:"square",lead:[72,0,76,0,79,0,76,0,74,0,77,0,81,0,79,0, 72,0,76,0,79,0,84,0,83,0,79,0,76,0,74,0],bass:[48,0,0,0,48,0,0,0,53,0,0,0,55,0,0,0]},
- {n:"Пенный фанк",bpm:104,w:"triangle",lead:[67,0,70,72,0,70,67,0,65,0,67,0,70,0,0,0, 67,0,70,72,0,74,72,0,70,0,67,0,65,0,67,0],bass:[43,0,43,0,0,46,0,48,41,0,41,0,0,43,0,46]},
- {n:"Мятный чиптюн",bpm:132,w:"square",lead:[69,73,76,81,69,73,76,81,66,69,73,78,68,71,76,80, 69,73,76,81,76,73,69,73,66,69,73,78,71,68,64,68],bass:[45,0,0,0,45,0,0,0,42,0,0,0,40,0,0,0]},
- {n:"Две минуты сияния",bpm:96,w:"triangle",lead:[76,0,0,79,0,0,81,0,79,0,76,0,74,0,72,0, 74,0,0,76,0,0,79,0,76,0,74,0,72,0,0,0],bass:[48,0,55,0,52,0,55,0,45,0,52,0,48,0,52,0]}
-];
-var tuneSel=document.getElementById("tuneSel");
-TUNES.forEach(function(t,i){var o=document.createElement("option");o.value=i;o.textContent=t.n;tuneSel.appendChild(o)});
-var AC=null,master=null,mInt=null,mStep=0,curTune=null;
-function hz(m){return 440*Math.pow(2,(m-69)/12)}
-function tone(f,dur,type,vol){var t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02)}
-function kick(){var t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(40,t+0.12);g.gain.setValueAtTime(0.35,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.15);o.connect(g);g.connect(master);o.start(t);o.stop(t+0.17)}
-function startMusic(){
-  if(mInt)return;
-  try{ if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.5;master.connect(AC.destination)} if(AC.state==="suspended")AC.resume(); }catch(e){return}
-  if(!curTune){curTune= tuneSel.value==="rnd"? TUNES[Math.floor(Math.random()*TUNES.length)] : TUNES[+tuneSel.value]; mStep=0}
-  var t=curTune, sx=60/t.bpm/4;
-  mInt=setInterval(function(){
-    var l=t.lead[mStep%t.lead.length], b=t.bass[mStep%t.bass.length];
-    if(l) tone(hz(l),sx*1.6,t.w,0.07);
-    if(b) tone(hz(b),sx*3,"triangle",0.16);
-    if(mStep%4===0) kick();
-    mStep++;
-  },sx*1000);
-  document.getElementById("eq").classList.add("play");
-  document.getElementById("nowPlaying").textContent="Играет: «"+t.n+"»";
-}
-function stopMusic(){
-  if(mInt){clearInterval(mInt);mInt=null}
-  var eq=document.getElementById("eq");if(eq)eq.classList.remove("play");
-}
-function syncMusic(){
-  var on=document.getElementById("musicOn").checked;
-  if(timer&&on) startMusic(); else stopMusic();
-  if(!timer && gi===0) curTune=null;
-}
-document.getElementById("musicOn").addEventListener("change",syncMusic);
-tuneSel.addEventListener("change",function(){stopMusic();curTune=null;syncMusic()});
-
+// ---------- музыка: случайный хит (встроенный плеер YouTube) ----------
 var HITS=[
- "The Weeknd — Blinding Lights","Pharrell Williams — Happy","Mark Ronson ft. Bruno Mars — Uptown Funk","Dua Lipa — Levitating","Harry Styles — As It Was","Ed Sheeran — Shape of You","Imagine Dragons — Believer","BTS — Dynamite","Miley Cyrus — Flowers","Sabrina Carpenter — Espresso","ROSÉ & Bruno Mars — APT.","Lady Gaga & Bruno Mars — Die With A Smile","Justin Timberlake — Can't Stop the Feeling!","Ninety One — Ah!Yah!","SAINt JHN — Roses (Imanbek Remix)","Dimash — Love of Tired Swans","Kairat Nurtas — Ауырмайды жүрек","Miyagi & Andy Panda — Kosandra"
+ {t:"The Weeknd — Blinding Lights",id:"4NRXx6U8ABQ"},
+ {t:"Pharrell Williams — Happy",id:"ZbZSe6N_BXs"},
+ {t:"Mark Ronson ft. Bruno Mars — Uptown Funk",id:"OPf0YbXqDm0"},
+ {t:"Dua Lipa — Levitating",id:"TUVcZfQe-Kw"},
+ {t:"Harry Styles — As It Was",id:"H5v3kku4y6Q"},
+ {t:"Ed Sheeran — Shape of You",id:"JGwWNGJdvx8"},
+ {t:"Imagine Dragons — Believer",id:"7wtfhZwyrcc"},
+ {t:"BTS — Dynamite",id:"gdZLi9oWNZg"},
+ {t:"Miley Cyrus — Flowers",id:"G7KNmW9a75Y"},
+ {t:"Sabrina Carpenter — Espresso",id:"eVli-tstM5E"},
+ {t:"ROSÉ & Bruno Mars — APT.",id:"ekr2nIex040"},
+ {t:"Lady Gaga & Bruno Mars — Die With A Smile",id:"kPa7bsKwL-c"},
+ {t:"Justin Timberlake — Can't Stop the Feeling!",id:"ru0K8uYEZWw"},
+ {t:"Ninety One — Ah!Yah!Mah!",id:"TXndlL4XPE4"},
+ {t:"SAINt JHN — Roses (Imanbek Remix)",id:"2zToEPpFEN8"},
+ {t:"Dimash — The Love of Tired Swans",id:"92r47QSRYBI"},
+ {t:"Кайрат Нуртас — Ауырмайды жүрек",id:"OKYZAambb88"},
+ {t:"Miyagi & Andy Panda — Kosandra",id:"x1ZtIVuHph0"}
 ];
-var hi=Math.floor(Math.random()*HITS.length);
-function showHit(){var h=HITS[hi];document.getElementById("hitName").textContent=h;var q=encodeURIComponent(h.replace(" — "," "));
-  document.getElementById("hitYt").href="https://www.youtube.com/results?search_query="+q;
-  document.getElementById("hitSp").href="https://open.spotify.com/search/"+q;}
-document.getElementById("hitNext").addEventListener("click",function(){var n;do{n=Math.floor(Math.random()*HITS.length)}while(n===hi&&HITS.length>1);hi=n;showHit()});
+var hi=Math.floor(Math.random()*HITS.length), yt=null, ytReady=false, wantPlay=false, freshRun=true;
+function showHit(){var h=HITS[hi];document.getElementById("hitName").textContent=h.t;document.getElementById("hitYt").href="https://www.youtube.com/watch?v="+h.id}
+function nextHit(play){
+  var n;do{n=Math.floor(Math.random()*HITS.length)}while(n===hi&&HITS.length>1);hi=n;showHit();
+  if(!ytReady)return;
+  if(play){wantPlay=true;yt.loadVideoById(HITS[hi].id)} else {wantPlay=false;yt.cueVideoById(HITS[hi].id)}
+}
+function ytPlay(){if(ytReady&&!wantPlay){wantPlay=true;yt.playVideo()}}
+function ytPause(){if(ytReady&&wantPlay){wantPlay=false;yt.pauseVideo()}}
+function syncMusic(){
+  if(!timer&&gi===0){freshRun=true;ytPause();return}
+  if(timer){ if(freshRun){freshRun=false;nextHit(true)} else ytPlay(); }
+  else ytPause();
+}
+document.getElementById("hitNext").addEventListener("click",function(){nextHit(!!timer)});
 showHit();
+window.onYouTubeIframeAPIReady=function(){
+  yt=new YT.Player("ytPlayer",{videoId:HITS[hi].id,playerVars:{playsinline:1,rel:0,modestbranding:1},
+    events:{
+      onReady:function(){ytReady=true},
+      onError:function(){nextHit(wantPlay)},
+      onStateChange:function(e){if(e.data===0&&timer)nextHit(true)}
+    }});
+};
+(function(){var sc=document.createElement("script");sc.src="https://www.youtube.com/iframe_api";sc.onerror=function(){document.getElementById("ytWrap").hidden=true};document.head.appendChild(sc)})();
 
 // ---------- дневник ----------
 var KEY="smartsmile-diary-v1";
